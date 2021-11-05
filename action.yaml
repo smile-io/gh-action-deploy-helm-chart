@@ -29,4 +29,4 @@ runs:
           --git-user-name "smile-ci-service" \
           --github-token-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-token-mKMOOR" \
           --ssh-key-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-ssh-private-key-osnOEZ"
-        terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::307739032832:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
+        terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::${{ fromJson('{\"dev\": \"307739032832\", \"stage\": \"389299793054\", \"prod\": \"964498696771\"}')[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
