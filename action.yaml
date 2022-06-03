@@ -1,8 +1,12 @@
 name: "Deploy Helm"
 description: "Deploys a new helm chart version to Smile's infrastructure."
 inputs:
-  chart_version:
-    description: "The new version of the helm chart that should be deployed."
+  variable_name:
+    description: "The name of Terraform variable to change in the service module."
+    required: false
+    default: "chart_version"
+  variable_value:
+    description: "The value of the corresponding 'variable_name'. This is usually the new version of the helm chart that should be deployed."
     required: true
   short_environment:
     description: "Environment short-form as used in Smile's infrastructure-live repo. One of `dev`, `stage`, `prod`"
@@ -20,8 +24,8 @@ runs:
       shell: bash
       run: |
         terraform-update-variable \
-          --name "chart_version" \
-          --value "\"${{ inputs.chart_version }}\"" \
+          --name "\${{ inputs.variable_name }}\"" \
+          --value "\"${{ inputs.variable_value }}\"" \
           --vars-path "${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}/terragrunt.hcl" \
           --git-url "https://github.com/smile-io/infrastructure-live.git" \
           --git-checkout-path "${{ runner.temp }}/infrastructure-live" \
