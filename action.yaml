@@ -10,13 +10,17 @@ inputs:
   terraform_module_name:
     description: "Name of the Terraform module that manages this application's release."
     required: true
+  env_to_account_mapping_json:
+    description: "Mapping of environments to account ids."
+    default: '{"dev": "307739032832", "stage": "389299793054", "prod": "964498696771"}'
+
 runs:
   using: "composite"
   steps:
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Perform deployment
-      id: perform_deployment
+    - name: Update infrastructure-live
+      id: update_infra_live
       shell: bash
       run: |
         terraform-update-variable \
@@ -29,4 +33,28 @@ runs:
           --git-user-name "smile-ci-service" \
           --github-token-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-token-mKMOOR" \
           --ssh-key-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-ssh-private-key-osnOEZ"
-        terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::${{ fromJson('{"dev": "307739032832", "stage": "389299793054", "prod": "964498696771"}')[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
+    - name: Handle Release Errors
+      if: ${{ failure() && steps.update_infra_live.conclusion == 'failure' }}
+      shell: bash
+      run: echo "::error title=Error Updating Infra Live::Git error occured while pushing updates to `infra-live`. Please contact the SRE team for assistance."
+    - name: Release changes
+      id: release_changes
+      shell: bash
+      run: |
+        terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::${{ fromJson(inputs.env_to_account_mapping_json)[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
+    - name: Detect successful rollback
+      if: ${{ failure() && steps.release_changes.conclusion == 'failure' }}
+      id: detect_rollback_success
+      shell: bash
+      run: |
+        echo "release_status=${helm history ${{ inputs.terraform_module_name }} --max 1 -n applications -o json | jq .status}"
+    - name: Handle Successful Rollback
+      if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.release_status == 'deployed' }}
+      shell: bash
+      run: |
+        echo "::error title=Error With Release::Your release failed to apply to Smile's Kubernetes cluster successfully. This means one or more services were unable to start up properly, check your application logs in DataDog for errors or reach out to the SRE team for help debugging. If you can't find anything and think this may be a transient issue, you can try deploying again by retrying this Github Action."
+    - name: Handle Failed Rollback
+      if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.release_status != 'deployed' }}
+      shell: bash
+      run: |
+          echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes _may_ be partially deployed, and a manual rollback to a known working version via `smile-cli app rollback` is recommended."
