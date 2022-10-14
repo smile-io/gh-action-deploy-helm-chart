@@ -10,6 +10,9 @@ inputs:
   terraform_module_name:
     description: "Name of the Terraform module that manages this application's release."
     required: true
+  helm_release_name:
+    description: "Name of the helm release, used to better handle errors."
+    required: true
   env_to_account_mapping_json:
     description: "Mapping of environments to account ids."
     default: '{"dev": "307739032832", "stage": "389299793054", "prod": "964498696771"}'
@@ -36,7 +39,7 @@ runs:
     - name: Handle Release Errors
       if: ${{ failure() && steps.update_infra_live.conclusion == 'failure' }}
       shell: bash
-      run: echo "::error title=Error Updating Infra Live::Git error occured while pushing updates to `infra-live`. Please contact the SRE team for assistance."
+      run: echo "::error title=Error Updating Infra Live::Git error occured while pushing updates to smile-io/infrastructure-live. Please contact the SRE team for assistance."
     - name: Release changes
       id: release_changes
       shell: bash
@@ -47,7 +50,7 @@ runs:
       id: detect_rollback_success
       shell: bash
       run: |
-        echo "release_status=${helm history ${{ inputs.terraform_module_name }} --max 1 -n applications -o json | jq .status}"
+        echo "release_status=$(helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq .status)"
     - name: Handle Successful Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.release_status == 'deployed' }}
       shell: bash
@@ -57,4 +60,4 @@ runs:
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.release_status != 'deployed' }}
       shell: bash
       run: |
-          echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes _may_ be partially deployed, and a manual rollback to a known working version via `smile-cli app rollback` is recommended."
+          echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes may be partially deployed, and a manual rollback to a known working version via 'smile-cli app rollback' is recommended."
