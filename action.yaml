@@ -50,6 +50,7 @@ runs:
       id: detect_rollback_success
       shell: bash
       run: |
+        aws eks update-kubeconfig --name eks-${{ inputs.short_environment }} --region us-east-1
         echo "release_status=$(helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq .status)"
     - name: Handle Successful Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.release_status == 'deployed' }}
