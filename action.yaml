@@ -50,6 +50,12 @@ runs:
       id: detect_rollback_success
       shell: bash
       run: |
+        export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" \
+          $(aws sts assume-role \
+          --role-arn arn:aws:iam::${{ fromJson(inputs.env_to_account_mapping_json)[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts \
+          --role-session-name GHActionReleaseStatusCheck \
+          --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
+          --output text))
         aws eks update-kubeconfig --name eks-${{ inputs.short_environment }} --region us-east-1
         echo "release_status=$(helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq .status)"
     - name: Handle Successful Rollback
