@@ -67,5 +67,4 @@ runs:
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status != 'deployed' }}
       shell: bash
       run: |
-          echo "Debugging: ${{ steps.detect_rollback_success.outputs.release_status }}"
           echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes may be partially deployed, and a manual rollback to a known working version via 'smile-cli app rollback' is recommended."
