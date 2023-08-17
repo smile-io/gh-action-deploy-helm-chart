@@ -58,16 +58,6 @@ runs:
           --output text))
         aws eks update-kubeconfig --name eks-${{ inputs.short_environment }} --region us-east-1
         echo "release_status=$(helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq -r .[0].status)" >> $GITHUB_OUTPUT
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        role-to-assume: arn:aws:iam::${{ fromJson(inputs.env_to_account_mapping_json)[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts
-        aws-region: us-east-1
-    - name: Get secrets by ARN
-      uses: aws-actions/aws-secretsmanager-get-secrets@v1
-      with:
-        secret-ids: |
-          DATADOG_API_KEY,arn:aws:secretsmanager:us-east-1:877068819435:secret:datadog_api_key20210504192721241900000001-PyKNpM
     - name: Handle Successful Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status == 'deployed' }}
       shell: bash
@@ -83,7 +73,7 @@ runs:
         # Use curl to send the event to Datadog
         curl -X POST "https://api.datadoghq.com/api/v1/events" \
           -H "Content-type: application/json" \
-          -H "DD-API-KEY: ${{ DATADOG_API_KEY }}" \
+          -H "DD-API-KEY: $DD_API_KEY" \
           -d '{
             "title": "'"$TITLE"'",
             "text": "'"$TEXT"'",
