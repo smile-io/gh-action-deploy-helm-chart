@@ -69,19 +69,19 @@ runs:
         # Define the event details
         TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
-        TAGS="environment:${{ inputs.short_environment }}, service:${{ inputs.helm_release_name }}, action:rollback"
+        TAGS="environment:${{ inputs.short_environment }},service:${{ inputs.helm_release_name }},action:rollback"
         ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
         curl -X POST "https://api.datadoghq.com/api/v1/events" \
           -H "Content-type: application/json" \
           -H "DD-API-KEY: $DD_API_KEY" \
-          -d '{
-            "title": "'"$TITLE"'",
-            "text": "'"$TEXT"'",
-            "tags": ["'"$TAGS"'"],
-            "alert_type": "'"$ALERT_TYPE"'"
-          }'
+          -d "{
+            \"title\": \"${TITLE}\",
+            \"text\": \"${TEXT}\",
+            \"tags\": ["{$TAGS}"],
+            \"alert_type\": \"$ALERT_TYPE\"
+          }"
     - name: Handle Failed Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status != 'deployed' }}
       shell: bash
