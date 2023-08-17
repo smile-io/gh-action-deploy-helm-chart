@@ -59,7 +59,6 @@ runs:
           --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
           --output text))
         aws eks update-kubeconfig --name eks-${{ inputs.short_environment }} --region us-east-1
-        echo "Command: helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq -r .[0].status)"
         echo "release_status=$(helm history ${{ inputs.helm_release_name }} --max 1 -n applications -o json | jq -r .[0].status)" >> $GITHUB_OUTPUT
     - name: Handle Successful Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status == 'deployed' }}
@@ -68,9 +67,9 @@ runs:
         echo "::error title=Error With Release::Your release failed to apply to Smile's Kubernetes cluster successfully. This means one or more services were unable to start up properly, check your application logs in DataDog for errors or reach out to the SRE team for help debugging. If you can't find anything and think this may be a transient issue, you can try deploying again by retrying this Github Action."
         # Datadog API Event
         # Define the event details
-        TITLE="Deployment Rollback"
-        TEXT="A rollback occurred in ${{ inputs.short_environment }}."
-        TAGS="environment:${{ inputs.short_environment }},action:rollback"
+        TITLE="${{ inputs.short_environment }}/${{ inputs.helm_release_name }} deployment rollback"
+        TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
+        TAGS="environment:${{ inputs.short_environment }},app:action:rollback"
         ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
