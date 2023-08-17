@@ -67,9 +67,9 @@ runs:
         echo "::error title=Error With Release::Your release failed to apply to Smile's Kubernetes cluster successfully. This means one or more services were unable to start up properly, check your application logs in DataDog for errors or reach out to the SRE team for help debugging. If you can't find anything and think this may be a transient issue, you can try deploying again by retrying this Github Action."
         # Datadog API Event
         # Define the event details
-        TITLE="${{ inputs.short_environment }}/${{ inputs.helm_release_name }} deployment rollback"
+        TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
-        TAGS="environment:${{ inputs.short_environment }},app:action:rollback"
+        TAGS="environment:${{ inputs.short_environment }},service:${{ inputs.helm_release_name }},action:rollback"
         ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
