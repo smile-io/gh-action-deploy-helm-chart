@@ -70,6 +70,8 @@ runs:
         TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
         TAGS="environment:${{ inputs.short_environment }},service:${{ inputs.helm_release_name }},action:rollback"
+        ENVIRONMENT="$inputs.short_environment}"
+        SERVICE="$inputs.helm_release_name"
         ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
@@ -79,7 +81,7 @@ runs:
           -d "{
             \"title\": \"${TITLE}\",
             \"text\": \"${TEXT}\",
-            \"tags\": [\"environment:${{ inputs.short_environment }}\",\"service:${{ inputs.helm_release_name }}\",\"action:rollback\"]
+            \"tags\": [\"environment:${inputs.short_environment}\",\"service:${inputs.helm_release_name}\",\"action:rollback\"]
             \"alert_type\": \"$ALERT_TYPE\"
           }"
     - name: Handle Failed Rollback
