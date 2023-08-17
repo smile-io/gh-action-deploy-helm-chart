@@ -79,7 +79,7 @@ runs:
           -d "{
             \"title\": \"${TITLE}\",
             \"text\": \"${TEXT}\",
-            \"tags\": [\"{$TAGS}\", \"custom:metric\"],
+            \"tags\": [\"environment:${{ inputs.short_environment }}\",\"service:${{ inputs.helm_release_name }}\",\"action:rollback\"]
             \"alert_type\": \"$ALERT_TYPE\"
           }"
     - name: Handle Failed Rollback
