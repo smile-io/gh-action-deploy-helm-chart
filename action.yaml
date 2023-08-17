@@ -79,7 +79,7 @@ runs:
           -d "{
             \"title\": \"${TITLE}\",
             \"text\": \"${TEXT}\",
-            \"tags\": ["{$TAGS}"],
+            \"tags\": [\"{$TAGS}\", \"custom:metric\"],
             \"alert_type\": \"$ALERT_TYPE\"
           }"
     - name: Handle Failed Rollback
