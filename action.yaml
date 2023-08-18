@@ -99,7 +99,7 @@ runs:
         TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}."
         TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
         JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
-        ALERT_TYPE="error"
+        ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
         RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.datadoghq.com/api/v1/events" \
