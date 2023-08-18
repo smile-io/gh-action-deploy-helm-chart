@@ -63,8 +63,58 @@ runs:
       shell: bash
       run: |
         echo "::error title=Error With Release::Your release failed to apply to Smile's Kubernetes cluster successfully. This means one or more services were unable to start up properly, check your application logs in DataDog for errors or reach out to the SRE team for help debugging. If you can't find anything and think this may be a transient issue, you can try deploying again by retrying this Github Action."
+        # Datadog API Event
+        # Define the event details
+        TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
+        TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
+        TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
+        JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
+        ALERT_TYPE="warning"
+
+        # Use curl to send the event to Datadog
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.datadoghq.com/api/v1/events" \
+             -H "Content-Type: application/json" \
+             -H "DD-API-KEY: ${DD_API_KEY}" \
+             -d "{
+                 \"title\": \"${TITLE}\",
+                 \"text\": \"${TEXT}\",
+                 \"tags\": ${JSON_TAGS},
+                 \"alert_type\": \"$ALERT_TYPE\"
+             }")
+
+        if [ "$RESPONSE" -ne 202 ]; then
+            echo "Failed to send event to Datadog. API responded with status code: $RESPONSE"
+            exit 1
+        else
+            echo "Event sent to Datadog successfully."
+        fi
     - name: Handle Failed Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status != 'deployed' }}
       shell: bash
       run: |
           echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes may be partially deployed, and a manual rollback to a known working version via 'smile-cli app rollback' is recommended."
+          # Datadog API Event
+          # Define the event details
+          TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
+          TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}."
+          TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
+          JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
+          ALERT_TYPE="warning"
+
+          # Use curl to send the event to Datadog
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.datadoghq.com/api/v1/events" \
+               -H "Content-Type: application/json" \
+               -H "DD-API-KEY: ${DD_API_KEY}" \
+               -d "{
+                   \"title\": \"${TITLE}\",
+                   \"text\": \"${TEXT}\",
+                   \"tags\": ${JSON_TAGS},
+                   \"alert_type\": \"$ALERT_TYPE\"
+               }")
+
+          if [ "$RESPONSE" -ne 202 ]; then
+              echo "Failed to send event to Datadog. API responded with status code: $RESPONSE"
+              exit 1
+          else
+              echo "Event sent to Datadog successfully."
+          fi
