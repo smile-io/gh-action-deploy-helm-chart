@@ -69,15 +69,14 @@ runs:
         # Define the event details
         TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
-        TAGS="environment:${{ inputs.short_environment }},service:${{ inputs.helm_release_name }},action:rollback"
-        JSON_TAGS="[\"$(echo $TAGS | tr ',' '","' | tr ':' '\":\"')\"]"
+        TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
+        JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
         ALERT_TYPE="warning"
 
         # Use curl to send the event to Datadog
         RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.datadoghq.com/api/v1/events" \
              -H "Content-Type: application/json" \
-             -H "DD-API-KEY: ${API_KEY}" \
-             -H "DD-APPLICATION-KEY: ${APP_KEY}" \
+             -H "DD-API-KEY: ${DD_API_KEY}" \
              -d "{
                  \"title\": \"${TITLE}\",
                  \"text\": \"${TEXT}\",
