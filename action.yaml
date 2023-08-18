@@ -73,6 +73,7 @@ runs:
         JSON_TAGS="[\"$(echo $TAGS | tr ',' '","' | tr ':' '\":\"')\"]"
         ALERT_TYPE="warning"
 
+        echo ">>TAGS:  ${JSON_TAGS}"
 
         # Use curl to send the event to Datadog
         curl -X POST "https://api.datadoghq.com/api/v1/events" \
