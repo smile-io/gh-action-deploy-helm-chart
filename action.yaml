@@ -97,7 +97,7 @@ runs:
         # Define the event details
         TITLE="[${{ inputs.short_environment }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}."
-        TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
+        TAGS=("environment:${{ inputs.short_environment }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
         JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
         ALERT_TYPE="error"
 
