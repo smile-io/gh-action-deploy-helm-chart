@@ -73,18 +73,24 @@ runs:
         JSON_TAGS="[\"$(echo $TAGS | tr ',' '","' | tr ':' '\":\"')\"]"
         ALERT_TYPE="warning"
 
-        echo ">>TAGS:  ${JSON_TAGS}"
-
         # Use curl to send the event to Datadog
-        curl -X POST "https://api.datadoghq.com/api/v1/events" \
-          -H "Content-type: application/json" \
-          -H "DD-API-KEY: $DD_API_KEY" \
-          -d "{
-            \"title\": \"${TITLE}\",
-            \"text\": \"${TEXT}\",
-            \"tags\": ${JSON_TAGS},
-            \"alert_type\": \"$ALERT_TYPE\"
-          }"
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.datadoghq.com/api/v1/events" \
+             -H "Content-Type: application/json" \
+             -H "DD-API-KEY: ${API_KEY}" \
+             -H "DD-APPLICATION-KEY: ${APP_KEY}" \
+             -d "{
+                 \"title\": \"${TITLE}\",
+                 \"text\": \"${TEXT}\",
+                 \"tags\": ${JSON_TAGS},
+                 \"alert_type\": \"$ALERT_TYPE\"
+             }")
+
+        if [ "$RESPONSE" -ne 202 ]; then
+            echo "Failed to send event to Datadog. API responded with status code: $RESPONSE"
+            exit 1
+        else
+            echo "Event sent to Datadog successfully."
+        fi
     - name: Handle Failed Rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' && steps.detect_rollback_success.outputs.release_status != 'deployed' }}
       shell: bash
