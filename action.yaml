@@ -7,7 +7,7 @@ inputs:
   short_environment:
     description: "Environment short-form as used in Smile's infrastructure-live repo. One of `dev`, `stage`, `prod`"
     required: true
-  environmet_mapping_json:
+  environment_mapping_json:
     description: "Mapping of long environment names."
     default: '{"dev": "dev", "stage": "staging", "prod": "production"}'
   terraform_module_name:
@@ -68,9 +68,9 @@ runs:
         echo "::error title=Error With Release::Your release failed to apply to Smile's Kubernetes cluster successfully. This means one or more services were unable to start up properly, check your application logs in DataDog for errors or reach out to the SRE team for help debugging. If you can't find anything and think this may be a transient issue, you can try deploying again by retrying this Github Action."
         # Datadog API Event
         # Define the event details
-        TITLE="[${{ fromJson(inputs.environmet_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
+        TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
         TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
-        TAGS=("environment:${{ fromJson(inputs.environmet_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
+        TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
         JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
         ALERT_TYPE="warning"
 
@@ -98,9 +98,9 @@ runs:
           echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes may be partially deployed, and a manual rollback to a known working version via 'smile-cli app rollback' is recommended."
           # Datadog API Event
           # Define the event details
-          TITLE="[${{ fromJson(inputs.environmet_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
+          TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
           TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}."
-          TAGS=("environment:${{ fromJson(inputs.environmet_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
+          TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
           JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
           ALERT_TYPE="warning"
 
