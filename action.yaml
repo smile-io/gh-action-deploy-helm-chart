@@ -39,6 +39,7 @@ runs:
           --git-user-name "smile-ci-service" \
           --github-token-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-token-mKMOOR" \
           --ssh-key-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-ssh-private-key-osnOEZ"
+          exit 1
     - name: Handle Release Errors
       if: ${{ failure() && steps.update_infra_live.conclusion == 'failure' }}
       shell: bash
