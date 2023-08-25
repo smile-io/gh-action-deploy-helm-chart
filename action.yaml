@@ -70,7 +70,7 @@ runs:
         # Datadog API Event
         # Define the event details
         TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
-        TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}. Check GitHub Action details here https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        TEXT="%%% \n${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}.\n\nCheck GitHub Action details [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
         TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
         JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
         ALERT_TYPE="warning"
@@ -99,9 +99,8 @@ runs:
           echo "::error title=Error With Release::An unexpected error occured and Helm was unable to roll back successfully. Your changes may be partially deployed, and a manual rollback to a known working version via 'smile-cli app rollback' is recommended."
           # Datadog API Event
           # Define the event details
-          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
-          TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}. Check GitHub Action details here https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          TEXT="%%% \n${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}.\n\nCheck GitHub Action details [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
           JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
           ALERT_TYPE="warning"
