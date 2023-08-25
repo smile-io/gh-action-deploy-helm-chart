@@ -69,7 +69,7 @@ runs:
         # Datadog API Event
         # Define the event details
         TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
-        TEXT="${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}."
+        TEXT="%%% \n${{ inputs.helm_release_name }} app was rolled back in ${{ inputs.short_environment }}.\n\nCheck GitHub Action details [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
         TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:rollback")
         JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
         ALERT_TYPE="warning"
@@ -99,7 +99,7 @@ runs:
           # Datadog API Event
           # Define the event details
           TITLE="[${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}] ${{ inputs.helm_release_name }} deployment rollback"
-          TEXT="${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}."
+          TEXT="%%% \n${{ inputs.helm_release_name }} app rollback failed in ${{ inputs.short_environment }}.\n\nCheck GitHub Action details [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
           TAGS=("environment:${{ fromJson(inputs.environment_mapping_json)[inputs.short_environment] }}" "service:${{ inputs.helm_release_name }}" "action:failed_rollback")
           JSON_TAGS=$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)
           ALERT_TYPE="warning"
