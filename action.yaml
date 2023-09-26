@@ -31,7 +31,6 @@ runs:
       env:
         git_host: github.com
         git_username: git
-        GITHUB_TOKEN: $SMILE_CI_SERVICE_GITHUB_TOKEN
       run: |
         git config --global credential.helper 'cache --timeout 3600'
         store_credentials_cmd="protocol=https
@@ -55,8 +54,6 @@ runs:
     - name: Release changes
       id: release_changes
       shell: bash
-      env:
-        GITHUB_TOKEN: $SMILE_CI_SERVICE_GITHUB_TOKEN
       run: |
         eval `ssh-agent -s`
         ssh-add - <<< "${SMILE_CI_SERVICE_GITHUB_SSH_PRIVATE_KEY}"
