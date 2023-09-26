@@ -57,6 +57,8 @@ runs:
     - name: Release changes
       id: release_changes
       shell: bash
+      env:
+        GITHUB_TOKEN: $SMILE_CI_SERVICE_GITHUB_TOKEN
       run: |
         terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::${{ fromJson(inputs.env_to_account_mapping_json)[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
     - name: Detect successful rollback
