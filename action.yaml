@@ -28,7 +28,17 @@ runs:
     - name: Update infrastructure-live
       id: update_infra_live
       shell: bash
+      env:
+        git_host: github.com
+        git_username: git
       run: |
+        git config --global credential.helper 'cache --timeout 3600'
+        store_credentials_cmd="protocol=https
+        host=${git_host}
+        username=${git_username}
+        password=${SMILE_CI_SERVICE_GITHUB_TOKEN}
+        "
+        echo "${store_credentials_cmd}" | git credential-cache store
         terraform-update-variable \
           --name "chart_version" \
           --value "\"${{ inputs.chart_version }}\"" \
@@ -36,9 +46,7 @@ runs:
           --git-url "https://github.com/smile-io/infrastructure-live.git" \
           --git-checkout-path "${{ runner.temp }}/infrastructure-live" \
           --git-user-email "infrastructure+github-ci@smile.io" \
-          --git-user-name "smile-ci-service" \
-          --github-token-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-token-mKMOOR" \
-          --ssh-key-secrets-manager-arn "arn:aws:secretsmanager:us-east-1:877068819435:secret:smile-ci-service-github-ssh-private-key-osnOEZ"
+          --git-user-name "smile-ci-service"
     - name: Handle Release Errors
       if: ${{ failure() && steps.update_infra_live.conclusion == 'failure' }}
       shell: bash
@@ -47,6 +55,8 @@ runs:
       id: release_changes
       shell: bash
       run: |
+        eval `ssh-agent -s`
+        ssh-add - <<< "${SMILE_CI_SERVICE_GITHUB_SSH_PRIVATE_KEY}"
         terragrunt apply --terragrunt-working-dir "${{ runner.temp }}/infrastructure-live/${{ inputs.short_environment }}/us-east-1/${{ inputs.short_environment }}/services/${{ inputs.terraform_module_name }}"  --terragrunt-iam-role "arn:aws:iam::${{ fromJson(inputs.env_to_account_mapping_json)[inputs.short_environment] }}:role/allow-auto-deploy-from-other-accounts" -input=false -auto-approve
     - name: Detect successful rollback
       if: ${{ failure() && steps.release_changes.conclusion == 'failure' }}
